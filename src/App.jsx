@@ -1,10 +1,12 @@
 /** @format */
 
 import { useState, useEffect } from "react";
+import { evaluate } from "mathjs";
 
 export default function App() {
 	const [input, setInput] = useState("0");
-	const [display, setDisplay] = useState(0);
+	const [display, setDisplay] = useState("0");
+	const [isInputPrevResult, setIsInputPrevResult] = useState(false);
 
 	return (
 		<div
@@ -22,6 +24,8 @@ export default function App() {
 						input={input}
 						setInput={setInput}
 						setDisplay={setDisplay}
+						isInputPrevResult={isInputPrevResult}
+						setIsInputPrevResult={setIsInputPrevResult}
 					/>
 				</div>
 			</div>
@@ -44,22 +48,80 @@ function Screen({ input, display }) {
 
 // Display helper functions
 
-function Buttons({ input, setInput, setDisplay }) {
+function Buttons({
+	input,
+	setInput,
+	setDisplay,
+	isInputPrevResult,
+	setIsInputPrevResult,
+}) {
 	// Add click events to buttons
 	useEffect(() => {
 		// Event handlers
+		// process input
 		const handleInput = async enteredChar => {
-			let cleanedInput;
+			// Evaluate Input when = is pressed
+			if (enteredChar === "=") {
+				// passing test related issues
+				let stringInput = String(input);
+				// const extraLeadingNumbersRegex = /\d+ (:?\d+)/;
+				// const extraLeadingNumberMatch = stringInput.match(
+				// 	extraLeadingNumbersRegex
+				// );
+				// stringInput = extraLeadingNumberMatch
+				// 	? stringInput.replace(extraLeadingNumbersRegex, "")
+				// 	: stringInput;
+				// end of test related issues
+				// CURRENTLY WORKING ON
+				const extraOpRegex = /[+\-x/]$/;
+				const extraOpMatch = stringInput.match(extraOpRegex);
+				const expressionWithoutExtraOp = extraOpMatch
+					? stringInput.slice(0, -2)
+					: stringInput;
+				// replace x with * for mathjs
+				const finalExpression = expressionWithoutExtraOp.includes("x")
+					? expressionWithoutExtraOp.replace("x", "*")
+					: expressionWithoutExtraOp;
 
+				const evaulatedExpression = await Promise.resolve(
+					String(evaluate(finalExpression))
+				);
+
+				setIsInputPrevResult(true);
+				setInput(evaulatedExpression);
+				setDisplay(evaulatedExpression);
+				return;
+			}
+
+			// Clear claculator when AC is pressed
 			if (enteredChar === "AC") {
 				setInput("0");
 				setDisplay("0");
 				return;
 			}
 
-			// clean input
-			cleanedInput = await cleanInputAsync(input, enteredChar);
-			// setInput(prev => prev + " " + enteredChar);
+			// Process mathmatical expression for other buttons
+			// Clean input
+			const cleanedInput = await cleanInputAsync(
+				input,
+				enteredChar,
+				isInputPrevResult,
+				setIsInputPrevResult
+			);
+
+			// Get current number
+			const currentNumber = cleanedInput.match(/\d+\.?\d*(?!.*\d)/)[0];
+			console.log(currentNumber);
+			/* 
+			\d+ 			=> Matches one or more digits (0–9).
+			\.? 			=> Matches an optional decimal point.
+			\d* 			=> Matches zero or more digits after the decimal point, allowing for whole numbers and decimals.
+			(?!.*\d) 	=> This is a negative lookahead assertion 
+											- ensures no digits appear after the matched number in the string
+											- effectively captures that this is the last number in the string.
+			*/
+
+			setDisplay(currentNumber);
 			setInput(cleanedInput);
 		};
 
@@ -75,7 +137,7 @@ function Buttons({ input, setInput, setDisplay }) {
 		// Cleanup event listeners on App unmount
 		return () =>
 			buttons.forEach(b => b.removeEventListener("click", handleClick));
-	}, [input, setInput, setDisplay]);
+	}, [input, setInput, setDisplay, isInputPrevResult, setIsInputPrevResult]);
 
 	return (
 		<>
@@ -137,15 +199,47 @@ function Buttons({ input, setInput, setDisplay }) {
 	);
 }
 
-function cleanInput(input, enteredChar) {
+function cleanInput(
+	input,
+	enteredChar,
+	isInputPrevResult,
+	setIsInputPrevResult
+) {
 	const prevChar = input[input.length - 1];
 	const isEnteredCharNan = isNaN(enteredChar);
 	const isPrevCharNan = isNaN(prevChar);
 
+	// hanldle isInputPrevResult === true
+	if (isInputPrevResult) {
+		if (enteredChar === "=") return;
+
+		if (enteredChar === ".") {
+			setIsInputPrevResult(false);
+			return "0.";
+		}
+		if (isEnteredCharNan) {
+			setIsInputPrevResult(false);
+			return input + " " + enteredChar;
+		}
+		// default: entered character is a number
+		setIsInputPrevResult(false);
+		return enteredChar;
+	}
+
 	// Handle entering a decimal
 	if (enteredChar === ".") {
+		// Case: Operator and negative
+		const operaterAndNegativeMatchRegex = /[+x/]\s-$/;
+		const operaterAndNegativeMatch = input.match(
+			operaterAndNegativeMatchRegex
+		);
+		if (operaterAndNegativeMatch) return input + "0.";
+		// Case: Preceding operator
+		const precedingOperatorRegex = /[+\-x/]$/;
+		const precedingOperatorMatch = input.match(precedingOperatorRegex);
+		if (precedingOperatorMatch) return input + " " + "0.";
 		// Only allow a decimal if the last character is a digit
-		if (isPrevCharNan) return input;
+		if (prevChar === ".") return input;
 		// Find the current number at the end
 		const match = input.match(/\d+\.?\d*$/);
 		const lastNum = match[0];
@@ -156,6 +250,25 @@ function cleanInput(input, enteredChar) {
 	// Handle entering consecutive operators
 	if (isEnteredCharNan && isPrevCharNan) {
 		// Replace the last operator with the new one
+		// Case: negative sign
+		if (enteredChar === "-") {
+			// Reject second minus
+			const isMinusAlreadyEntered = prevChar === "-";
+			if (isMinusAlreadyEntered) return;
+
+			// default: add minus after operator
+			return input + " " + "-";
+		}
+
+		// Other operators
+		// Case: operator and negative
+		const regex = /[+x/]\s-$/;
+		const match = input.match(regex);
+		const isOpAndNegative = match ? true : false;
+
+		if (isOpAndNegative) return input.replace(regex, enteredChar);
+
+		// Default
 		return input.slice(0, -1) + enteredChar;
 	}
 
@@ -172,11 +285,23 @@ function cleanInput(input, enteredChar) {
 	if (isEnteredCharNan) return input + " " + enteredChar;
 
 	// New number after operator
+	// Number after operator and negative
+	const OperatorAndNegativeRegex = /[+x/]\s-$/;
+	const operaterAndNegativeMatch = input.match(OperatorAndNegativeRegex);
+	if (operaterAndNegativeMatch) return input + enteredChar;
+	// Number after operator but no negative afterwards
 	if (isPrevCharNan && prevChar !== ".") return input + " " + enteredChar;
 
 	// Normal case: just append
 	return input + enteredChar;
 }
 
-const cleanInputAsync = (input, enteredChar) =>
-	Promise.resolve(cleanInput(input, enteredChar));
+const cleanInputAsync = (
+	input,
+	enteredChar,
+	isInputPrevResult,
+	setIsInputPrevResult
+) =>
+	Promise.resolve(
+		cleanInput(input, enteredChar, isInputPrevResult, setIsInputPrevResult)
+	);
