@@ -1,0 +1,26 @@
+/** @format */
+
+.calculator {
+	display: grid;
+	grid-template-columns: repeat(4, 6.25rem); /* 100px */
+	/* grid-auto-rows: auto 4.6875rem; */ /* 75px */
+	grid-template-rows: auto repeat(5, 4rem);
+	/* width: 25rem; */
+	/* height: 28rem; */
+}
+
+.calc-grid-col-4 {
+	grid-column: span 4;
+}
+
+.calc-grid-col-2 {
+	grid-column: span 2;
+}
+
+.calc-grid-row-2 {
+	grid-row: span 2;
+}
+
+.input-display {
+	min-height: 1lh;
+}
