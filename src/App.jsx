@@ -58,7 +58,7 @@ function Buttons({ input, setInput, setDisplay }) {
 			}
 
 			// clean input
-			cleanedInput = await cleanInput(input, enteredChar);
+			cleanedInput = await cleanInputAsync(input, enteredChar);
 			// setInput(prev => prev + " " + enteredChar);
 			setInput(cleanedInput);
 		};
@@ -137,73 +137,46 @@ function Buttons({ input, setInput, setDisplay }) {
 	);
 }
 
-// Buttons helper functions
-const cleanInput = (input, enteredChar) =>
-	new Promise(resolve => {
-		let result;
+function cleanInput(input, enteredChar) {
+	const prevChar = input[input.length - 1];
+	const isEnteredCharNan = isNaN(enteredChar);
+	const isPrevCharNan = isNaN(prevChar);
 
-		const prevInputLastChar = input[input.length - 1];
-		const enteredCharIsNan = isNaN(enteredChar);
-		const prevInputLastCharIsNan = isNaN(prevInputLastChar);
+	// Handle entering a decimal
+	if (enteredChar === ".") {
+		// Only allow a decimal if the last character is a digit
+		if (isPrevCharNan) return input;
+		// Find the current number at the end
+		const match = input.match(/\d+\.?\d*$/);
+		const lastNum = match[0];
+		if (lastNum.includes(".")) return input;
+		return input + ".";
+	}
 
-		// Handle decimals
-		if (enteredChar === ".") {
-			// Deny entry when last char is not a number
-			if (prevInputLastCharIsNan) resolve(input);
-			else {
-				// Handle dot when last entry is a number
-				// extract current number
-				const regexLastNumberGroup = /\d+\.?\d*$/;
-				/* 
-				\d+ => Matches one or more digits.
-				\.? => Optional decimal point
-				\d* => Zero or more digits
-				$   => End of string
-				*/
-				const lastNumberGroup = input.match(regexLastNumberGroup)[0];
-				const hasDot = lastNumberGroup.includes(".");
+	// Handle entering consecutive operators
+	if (isEnteredCharNan && isPrevCharNan) {
+		// Replace the last operator with the new one
+		return input.slice(0, -1) + enteredChar;
+	}
 
-				// prev logic
-				if (hasDot) resolve(input);
-				else result = input + enteredChar;
-			}
-		} else {
-			// Handle consecutive operator entry
-			if (enteredCharIsNan && prevInputLastCharIsNan) {
-				if (input.length === 0) {
-					result = input;
-				} else {
-					result = input.slice(0, -1) + enteredChar;
-				}
-			} else {
-				// Handle leading 0 entries when input is 0
-				const isFirstEntry =
-					(input.length === 0 || input.length === 1) && input === "0";
-				if (isFirstEntry) {
-					// Handle adding 0 to 0
-					if (isFirstEntry && enteredChar === "0") result = "0";
-					// Handle operator on first entry
-					else if (enteredCharIsNan)
-						result = input + " " + enteredChar;
-					// handle non zero number when input is 0
-					else {
-						// handle entering non zero numbers when input is 0
-						result = enteredChar;
-					}
-				} else {
-					// handle non first entries number entry
-					// handle operator entries
-					if (enteredCharIsNan) result = input + " " + enteredChar;
-					else {
-						// handle number entries
-						// handle previous operand entry
-						if (prevInputLastCharIsNan && prevInputLastChar !== ".")
-							result = input + " " + enteredChar;
-						// handle number entries when prev char is a number
-						else result = input + enteredChar;
-					}
-				}
-			}
-		}
-		resolve(result);
-	});
+	// Handle leading zero scenario
+	const isInputZero = input === "0";
+	if (isInputZero) {
+		// Handle operator entry: always add space before operator for readability
+		if (isEnteredCharNan) return input + " " + enteredChar;
+		// Handle numbers
+		return enteredChar;
+	}
+
+	// Handle operator entry: always add space before operator for readability
+	if (isEnteredCharNan) return input + " " + enteredChar;
+
+	// New number after operator
+	if (isPrevCharNan && prevChar !== ".") return input + " " + enteredChar;
+
+	// Normal case: just append
+	return input + enteredChar;
+}
+
+const cleanInputAsync = (input, enteredChar) =>
+	Promise.resolve(cleanInput(input, enteredChar));
