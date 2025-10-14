@@ -4,7 +4,21 @@
 
 Code works on vscode, but not on codepen.io
 
-## solution
+## IMPORTANT - PROBLEM SOLVED
+
+keep this file only to review for additional factoring then delete.
+
+### Solution
+
+remove useEffect and manually add handleClick to buttons insteado of using buttons.forEach
+
+#### Explanation
+
+useEffect was needed because buttons.forEach was in the components body before the return statement which has the jsx for the buttons. useEffect fires after the component has been rendered and the jsx is returned.
+
+However, adding clickEvents through buttons.forEach does not operate the same in all environments for React and it's best avoided.
+
+## Solution research
 
 Claude Haiku 3.5
 

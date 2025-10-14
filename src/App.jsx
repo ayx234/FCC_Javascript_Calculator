@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { evaluate } from "mathjs";
 
 export default function App() {
@@ -56,63 +56,62 @@ function Buttons({
 	setIsInputPrevResult,
 }) {
 	// Add click events to buttons
-	useEffect(() => {
-		// Event handlers
-		// process input
-		const handleInput = async enteredChar => {
-			// Evaluate Input when = is pressed
-			if (enteredChar === "=") {
-				// passing test related issues
-				let stringInput = String(input);
-				// const extraLeadingNumbersRegex = /\d+ (:?\d+)/;
-				// const extraLeadingNumberMatch = stringInput.match(
-				// 	extraLeadingNumbersRegex
-				// );
-				// stringInput = extraLeadingNumberMatch
-				// 	? stringInput.replace(extraLeadingNumbersRegex, "")
-				// 	: stringInput;
-				// end of test related issues
-				// CURRENTLY WORKING ON
-				const extraOpRegex = /[+\-x/]$/;
-				const extraOpMatch = stringInput.match(extraOpRegex);
-				const expressionWithoutExtraOp = extraOpMatch
-					? stringInput.slice(0, -2)
-					: stringInput;
-				// replace x with * for mathjs
-				const finalExpression = expressionWithoutExtraOp.includes("x")
-					? expressionWithoutExtraOp.replace("x", "*")
-					: expressionWithoutExtraOp;
+	// Event handlers
+	// process input
+	const handleInput = async enteredChar => {
+		// Evaluate Input when = is pressed
+		if (enteredChar === "=") {
+			// passing test related issues
+			let stringInput = String(input);
+			// const extraLeadingNumbersRegex = /\d+ (:?\d+)/;
+			// const extraLeadingNumberMatch = stringInput.match(
+			// 	extraLeadingNumbersRegex
+			// );
+			// stringInput = extraLeadingNumberMatch
+			// 	? stringInput.replace(extraLeadingNumbersRegex, "")
+			// 	: stringInput;
+			// end of test related issues
+			// CURRENTLY WORKING ON
+			const extraOpRegex = /[+\-x/]$/;
+			const extraOpMatch = stringInput.match(extraOpRegex);
+			const expressionWithoutExtraOp = extraOpMatch
+				? stringInput.slice(0, -2)
+				: stringInput;
+			// replace x with * for mathjs
+			const finalExpression = expressionWithoutExtraOp.includes("x")
+				? expressionWithoutExtraOp.replace("x", "*")
+				: expressionWithoutExtraOp;
 
-				const evaulatedExpression = await Promise.resolve(
-					String(evaluate(finalExpression))
-				);
-
-				setIsInputPrevResult(true);
-				setInput(evaulatedExpression);
-				setDisplay(evaulatedExpression);
-				return;
-			}
-
-			// Clear claculator when AC is pressed
-			if (enteredChar === "AC") {
-				setInput("0");
-				setDisplay("0");
-				setIsInputPrevResult(false);
-				return;
-			}
-
-			// Process mathmatical expression for other buttons
-			// Clean input
-			const cleanedInput = await cleanInputAsync(
-				input,
-				enteredChar,
-				isInputPrevResult,
-				setIsInputPrevResult
+			const evaulatedExpression = await Promise.resolve(
+				String(evaluate(finalExpression))
 			);
 
-			// Get current number
-			const currentNumber = cleanedInput.match(/\d+\.?\d*(?!.*\d)/)[0];
-			/* 
+			setIsInputPrevResult(true);
+			setInput(evaulatedExpression);
+			setDisplay(evaulatedExpression);
+			return;
+		}
+
+		// Clear claculator when AC is pressed
+		if (enteredChar === "AC") {
+			setInput("0");
+			setDisplay("0");
+			setIsInputPrevResult(false);
+			return;
+		}
+
+		// Process mathmatical expression for other buttons
+		// Clean input
+		const cleanedInput = await cleanInputAsync(
+			input,
+			enteredChar,
+			isInputPrevResult,
+			setIsInputPrevResult
+		);
+
+		// Get current number
+		const currentNumber = cleanedInput.match(/\d+\.?\d*(?!.*\d)/)[0];
+		/* 
 			\d+ 			=> Matches one or more digits (0–9).
 			\.? 			=> Matches an optional decimal point.
 			\d* 			=> Matches zero or more digits after the decimal point, allowing for whole numbers and decimals.
@@ -121,78 +120,133 @@ function Buttons({
 											- effectively captures that this is the last number in the string.
 			*/
 
-			setDisplay(currentNumber);
-			setInput(cleanedInput);
-		};
+		setDisplay(currentNumber);
+		setInput(cleanedInput);
+	};
 
-		const buttons = document.querySelectorAll("button");
-
-		const handleClick = e => {
-			handleInput(e.target.textContent);
-		};
-
-		// Add event listeners
-		buttons.forEach(b => b.addEventListener("click", handleClick));
-
-		// Cleanup event listeners on App unmount
-		return () =>
-			buttons.forEach(b => b.removeEventListener("click", handleClick));
-	}, [input, setInput, setDisplay, isInputPrevResult, setIsInputPrevResult]);
+	const handleClick = e => {
+		handleInput(e.target.textContent);
+	};
 
 	return (
 		<>
-			<button id="clear" className="btn border rounded-0 calc-grid-col-2">
+			<button
+				onClick={handleClick}
+				id="clear"
+				className="btn border rounded-0 calc-grid-col-2"
+			>
 				AC
 			</button>
-			<button id="divide" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="divide"
+				className="btn border rounded-0"
+			>
 				/
 			</button>
-			<button id="multiply" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="multiply"
+				className="btn border rounded-0"
+			>
 				x
 			</button>
-			<button id="seven" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="seven"
+				className="btn border rounded-0"
+			>
 				7
 			</button>
-			<button id="eight" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="eight"
+				className="btn border rounded-0"
+			>
 				8
 			</button>
-			<button id="nine" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="nine"
+				className="btn border rounded-0"
+			>
 				9
 			</button>
-			<button id="subtract" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="subtract"
+				className="btn border rounded-0"
+			>
 				-
 			</button>
-			<button id="four" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="four"
+				className="btn border rounded-0"
+			>
 				4
 			</button>
-			<button id="five" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="five"
+				className="btn border rounded-0"
+			>
 				5
 			</button>
-			<button id="six" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="six"
+				className="btn border rounded-0"
+			>
 				6
 			</button>
-			<button id="add" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="add"
+				className="btn border rounded-0"
+			>
 				+
 			</button>
-			<button id="one" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="one"
+				className="btn border rounded-0"
+			>
 				1
 			</button>
-			<button id="two" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="two"
+				className="btn border rounded-0"
+			>
 				2
 			</button>
-			<button id="three" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="three"
+				className="btn border rounded-0"
+			>
 				3
 			</button>
 			<button
+				onClick={handleClick}
 				id="equals"
 				className="btn border rounded-0 calc-grid-row-2"
 			>
 				=
 			</button>
-			<button id="zero" className="btn border rounded-0 calc-grid-col-2">
+			<button
+				onClick={handleClick}
+				id="zero"
+				className="btn border rounded-0 calc-grid-col-2"
+			>
 				0
 			</button>
-			<button id="decimal" className="btn border rounded-0">
+			<button
+				onClick={handleClick}
+				id="decimal"
+				className="btn border rounded-0"
+			>
 				.
 			</button>
 		</>

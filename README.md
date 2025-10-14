@@ -8,12 +8,4 @@ FreeCodeCamp frontend development libraries project.
 
 ## TODO
 
--   IMPORTANT:
-
-    -   tests don't pass on codepen.io
-        -   possible causes:
-            -   using buttons.forEach to assign click events
-            -   using useEffect to for buttons.forEach
-            -   other possible causes are in problemSolving.md
-
 -   install gh-pages
