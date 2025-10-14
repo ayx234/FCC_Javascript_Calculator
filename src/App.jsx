@@ -97,6 +97,7 @@ function Buttons({
 			if (enteredChar === "AC") {
 				setInput("0");
 				setDisplay("0");
+				setIsInputPrevResult(false);
 				return;
 			}
 
@@ -111,7 +112,6 @@ function Buttons({
 
 			// Get current number
 			const currentNumber = cleanedInput.match(/\d+\.?\d*(?!.*\d)/)[0];
-			console.log(currentNumber);
 			/* 
 			\d+ 			=> Matches one or more digits (0–9).
 			\.? 			=> Matches an optional decimal point.
@@ -248,7 +248,7 @@ function cleanInput(
 	}
 
 	// Handle entering consecutive operators
-	if (isEnteredCharNan && isPrevCharNan) {
+	if (isEnteredCharNan && isPrevCharNan && prevChar !== ".") {
 		// Replace the last operator with the new one
 		// Case: negative sign
 		if (enteredChar === "-") {
