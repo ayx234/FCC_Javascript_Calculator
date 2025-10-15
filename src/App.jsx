@@ -46,8 +46,11 @@ function Screen({ input, display }) {
 	);
 }
 
-// Display helper functions
+// --- Helper regexes ---
+const TRAILING_OPERATOR_REGEX = /[+\-x/]$/;
+const OPERATOR_AND_NEGATIVE_REGEX = /[+x/]\s-$/;
 
+// --- Buttons Component ---
 function Buttons({
 	input,
 	setInput,
@@ -55,44 +58,33 @@ function Buttons({
 	isInputPrevResult,
 	setIsInputPrevResult,
 }) {
-	// Add click events to buttons
-	// Event handlers
-	// process input
+	// Handles all button input
 	const handleInput = async enteredChar => {
-		// Evaluate Input when = is pressed
+		// --- Evaluate expression ---
 		if (enteredChar === "=") {
-			// passing test related issues
 			let stringInput = String(input);
-			// const extraLeadingNumbersRegex = /\d+ (:?\d+)/;
-			// const extraLeadingNumberMatch = stringInput.match(
-			// 	extraLeadingNumbersRegex
-			// );
-			// stringInput = extraLeadingNumberMatch
-			// 	? stringInput.replace(extraLeadingNumbersRegex, "")
-			// 	: stringInput;
-			// end of test related issues
-			// CURRENTLY WORKING ON
-			const extraOpRegex = /[+\-x/]$/;
-			const extraOpMatch = stringInput.match(extraOpRegex);
-			const expressionWithoutExtraOp = extraOpMatch
+
+			// Remove trailing operator if present
+			const hasTrailingOperator =
+				TRAILING_OPERATOR_REGEX.test(stringInput);
+			const expression = hasTrailingOperator
 				? stringInput.slice(0, -2)
 				: stringInput;
-			// replace x with * for mathjs
-			const finalExpression = expressionWithoutExtraOp.includes("x")
-				? expressionWithoutExtraOp.replace("x", "*")
-				: expressionWithoutExtraOp;
 
-			const evaulatedExpression = await Promise.resolve(
-				String(evaluate(finalExpression))
+			// Replace 'x' with '*' for mathjs
+			const mathExpression = expression.replace(/x/g, "*");
+
+			const evaluated = await Promise.resolve(
+				String(evaluate(mathExpression))
 			);
 
 			setIsInputPrevResult(true);
-			setInput(evaulatedExpression);
-			setDisplay(evaulatedExpression);
+			setInput(evaluated);
+			setDisplay(evaluated);
 			return;
 		}
 
-		// Clear claculator when AC is pressed
+		// --- Clear calculator ---
 		if (enteredChar === "AC") {
 			setInput("0");
 			setDisplay("0");
@@ -100,8 +92,7 @@ function Buttons({
 			return;
 		}
 
-		// Process mathmatical expression for other buttons
-		// Clean input
+		// --- Process other input ---
 		const cleanedInput = await cleanInputAsync(
 			input,
 			enteredChar,
@@ -109,8 +100,9 @@ function Buttons({
 			setIsInputPrevResult
 		);
 
-		// Get current number
-		const currentNumber = cleanedInput.match(/\d+\.?\d*(?!.*\d)/)[0];
+		// Extract the current number for display
+		const currentNumberMatch = cleanedInput.match(/\d+\.?\d*(?!.*\d)/);
+		const currentNumber = currentNumberMatch ? currentNumberMatch[0] : "0";
 		/* 
 			\d+ 			=> Matches one or more digits (0–9).
 			\.? 			=> Matches an optional decimal point.
@@ -253,6 +245,7 @@ function Buttons({
 	);
 }
 
+// --- Input Cleaning Logic ---
 function cleanInput(
 	input,
 	enteredChar,
@@ -263,7 +256,7 @@ function cleanInput(
 	const isEnteredCharNan = isNaN(enteredChar);
 	const isPrevCharNan = isNaN(prevChar);
 
-	// hanldle isInputPrevResult === true
+	// --- If previous input was a result ---
 	if (isInputPrevResult) {
 		if (enteredChar === "=") return;
 
@@ -275,78 +268,57 @@ function cleanInput(
 			setIsInputPrevResult(false);
 			return input + " " + enteredChar;
 		}
-		// default: entered character is a number
+		// Default: entered character is a number
 		setIsInputPrevResult(false);
 		return enteredChar;
 	}
 
-	// Handle entering a decimal
+	// --- Handle decimal entry ---
 	if (enteredChar === ".") {
-		// Case: Operator and negative
-		const operaterAndNegativeMatchRegex = /[+x/]\s-$/;
-		const operaterAndNegativeMatch = input.match(
-			operaterAndNegativeMatchRegex
-		);
-		if (operaterAndNegativeMatch) return input + "0.";
-		// Case: Preceding operator
-		const precedingOperatorRegex = /[+\-x/]$/;
-		const precedingOperatorMatch = input.match(precedingOperatorRegex);
-		if (precedingOperatorMatch) return input + " " + "0.";
-		// Only allow a decimal if the last character is a digit
+		// Operator and negative
+		if (OPERATOR_AND_NEGATIVE_REGEX.test(input)) return input + "0.";
+		// Preceding operator
+		if (TRAILING_OPERATOR_REGEX.test(input)) return input + " 0.";
+		// Prevent double decimal
 		if (prevChar === ".") return input;
-		// Find the current number at the end
+		// Only allow decimal if not already present in current number
 		const match = input.match(/\d+\.?\d*$/);
-		const lastNum = match[0];
+		const lastNum = match ? match[0] : "";
 		if (lastNum.includes(".")) return input;
 		return input + ".";
 	}
 
-	// Handle entering consecutive operators
+	// --- Handle consecutive operators ---
 	if (isEnteredCharNan && isPrevCharNan && prevChar !== ".") {
-		// Replace the last operator with the new one
-		// Case: negative sign
+		// Negative sign after operator
 		if (enteredChar === "-") {
-			// Reject second minus
-			const isMinusAlreadyEntered = prevChar === "-";
-			if (isMinusAlreadyEntered) return;
-
-			// default: add minus after operator
-			return input + " " + "-";
+			if (prevChar === "-") return; // Reject double minus
+			return input + " -";
 		}
-
-		// Other operators
-		// Case: operator and negative
-		const regex = /[+x/]\s-$/;
-		const match = input.match(regex);
-		const isOpAndNegative = match ? true : false;
-
-		if (isOpAndNegative) return input.replace(regex, enteredChar);
-
-		// Default
+		// Operator and negative
+		if (OPERATOR_AND_NEGATIVE_REGEX.test(input)) {
+			return input.replace(OPERATOR_AND_NEGATIVE_REGEX, enteredChar);
+		}
+		// Replace last operator
 		return input.slice(0, -1) + enteredChar;
 	}
 
-	// Handle leading zero scenario
-	const isInputZero = input === "0";
-	if (isInputZero) {
-		// Handle operator entry: always add space before operator for readability
+	// --- Leading zero ---
+	if (input === "0") {
 		if (isEnteredCharNan) return input + " " + enteredChar;
-		// Handle numbers
 		return enteredChar;
 	}
 
-	// Handle operator entry: always add space before operator for readability
+	// --- Operator entry: always add space before operator for readability ---
 	if (isEnteredCharNan) return input + " " + enteredChar;
 
-	// New number after operator
-	// Number after operator and negative
-	const OperatorAndNegativeRegex = /[+x/]\s-$/;
-	const operaterAndNegativeMatch = input.match(OperatorAndNegativeRegex);
-	if (operaterAndNegativeMatch) return input + enteredChar;
-	// Number after operator but no negative afterwards
+	// --- Number after operator and negative ---
+	if (OPERATOR_AND_NEGATIVE_REGEX.test(input)) return input + enteredChar;
+
+	// --- Number after operator (no negative) ---
 	if (isPrevCharNan && prevChar !== ".") return input + " " + enteredChar;
 
-	// Normal case: just append
+	// --- Default: append ---
 	return input + enteredChar;
 }
 
