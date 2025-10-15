@@ -11,14 +11,14 @@ export default function App() {
 	return (
 		<div
 			id="outer-container"
-			className="d-flex flex-column text-center bg-primary min-vh-100 fw-bold"
+			className="d-flex flex-column text-center bg-warning-subtle min-vh-100 fw-bold"
 		>
-			<h1 className="p-3 mb-0 bg-secondary">Javascript Calculator</h1>
+			<h1 className="p-3 mb-0">Javascript Calculator</h1>
 			<div
 				id="calculator-container"
-				className="flex-fill d-flex justify-content-center align-items-center bg-primary-subtle"
+				className="flex-fill d-flex justify-content-center align-items-center "
 			>
-				<div id="calculator" className="calculator bg-success">
+				<div id="calculator" className="calculator bg-dark p-1 rounded">
 					<Screen input={input} display={display} />
 					<Buttons
 						input={input}
@@ -35,7 +35,10 @@ export default function App() {
 
 function Screen({ input, display }) {
 	return (
-		<div className="bg-warning calc-grid-col-4 text-end" id="screen">
+		<div
+			className="bg-warning my-calc-grid-col-4 text-end rounded-top"
+			id="screen"
+		>
 			<div id="input" className="input-display mx-3 fw-light">
 				{input}
 			</div>
@@ -125,119 +128,123 @@ function Buttons({
 			<button
 				onClick={handleClick}
 				id="clear"
-				className="btn border rounded-0 calc-grid-col-2"
+				className="btn border rounded-0 my-calc-grid-col-2 bg-secondary text-light"
 			>
 				AC
 			</button>
 			<button
 				onClick={handleClick}
 				id="divide"
-				className="btn border rounded-0"
+				className="btn border rounded-0 bg-danger text-light"
+				style={{ "--bs-bg-opacity": ".85" }}
 			>
 				/
 			</button>
 			<button
 				onClick={handleClick}
 				id="multiply"
-				className="btn border rounded-0"
+				className="btn border rounded-0 bg-danger text-light"
+				style={{ "--bs-bg-opacity": ".85" }}
 			>
 				x
 			</button>
 			<button
 				onClick={handleClick}
 				id="seven"
-				className="btn border rounded-0"
+				className="btn border rounded-0 text-light"
 			>
 				7
 			</button>
 			<button
 				onClick={handleClick}
 				id="eight"
-				className="btn border rounded-0"
+				className="btn border rounded-0 text-light"
 			>
 				8
 			</button>
 			<button
 				onClick={handleClick}
 				id="nine"
-				className="btn border rounded-0"
+				className="btn border rounded-0 text-light"
 			>
 				9
 			</button>
 			<button
 				onClick={handleClick}
 				id="subtract"
-				className="btn border rounded-0"
+				className="btn border rounded-0 bg-danger text-light"
+				style={{ "--bs-bg-opacity": ".85" }}
 			>
 				-
 			</button>
 			<button
 				onClick={handleClick}
 				id="four"
-				className="btn border rounded-0"
+				className="btn border rounded-0 text-light"
 			>
 				4
 			</button>
 			<button
 				onClick={handleClick}
 				id="five"
-				className="btn border rounded-0"
+				className="btn border rounded-0 text-light"
 			>
 				5
 			</button>
 			<button
 				onClick={handleClick}
 				id="six"
-				className="btn border rounded-0"
+				className="btn border rounded-0 text-light"
 			>
 				6
 			</button>
 			<button
 				onClick={handleClick}
 				id="add"
-				className="btn border rounded-0"
+				className="btn border rounded-0 bg-danger text-light"
+				style={{ "--bs-bg-opacity": ".85" }}
 			>
 				+
 			</button>
 			<button
 				onClick={handleClick}
 				id="one"
-				className="btn border rounded-0"
+				className="btn border rounded-0 text-light"
 			>
 				1
 			</button>
 			<button
 				onClick={handleClick}
 				id="two"
-				className="btn border rounded-0"
+				className="btn border rounded-0 text-light"
 			>
 				2
 			</button>
 			<button
 				onClick={handleClick}
 				id="three"
-				className="btn border rounded-0"
+				className="btn border rounded-0 text-light"
 			>
 				3
 			</button>
 			<button
 				onClick={handleClick}
 				id="equals"
-				className="btn border rounded-0 calc-grid-row-2"
+				className="btn border rounded-0 my-calc-grid-row-2 my-rounded-br-1 bg-warning text-light"
 			>
 				=
 			</button>
 			<button
 				onClick={handleClick}
 				id="zero"
-				className="btn border rounded-0 calc-grid-col-2"
+				className="btn border rounded-0 my-calc-grid-col-2 my-rounded-bl-1 text-light"
 			>
 				0
 			</button>
 			<button
 				onClick={handleClick}
 				id="decimal"
-				className="btn border rounded-0"
+				className="btn border rounded-0 text-light"
 			>
 				.
 			</button>
